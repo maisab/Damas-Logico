@@ -1,3 +1,5 @@
+use_module(library(random)).
+
 %Regras para exibir o tabuleiro
 mostrar(pecaP, ' p ').
 mostrar(pecaC, ' c ').
@@ -54,11 +56,37 @@ jogo(T, V) :-
 		(encontraPosicao(T, I, J, P), peca_jog(P), encontraPosicao(T, DX, DY, E), casa_valida(E), 
 			movePeca(T, I, J, DX, DY, P, NovoTabuleiro), jogo(NovoTabuleiro, 2)); 
 
-		(encontraPosicao(T, I, J, P), encontraPosicao(T, DX, DY, E), inimigo(P,E),
+		(encontraPosicao(T, I, J, P), peca_jog(P), encontraPosicao(T, DX, DY, E), inimigo(P,E),
 			posicaoValidaComer(T, DX, DY), comePeca(T, I, J, DX, DY, P, NovoTabuleiro), jogo(NovoTabuleiro, 2))
-	);
+	); 
 
-	write('-Turno Computador-').
+	(write('-Turno Computador-'), nl, random(0, 8, IL), random(0, 8, JC),
+		write(IL), nl, write(JC), nl,
+
+		((encontraPosicao(T, IL, JC, P), peca_comp(P), 
+		   (ID is IL - 1, JD is JC + 1, ( (encontraPosicao(T, ID, JD, K), casa_valida(K)); 
+		   									((encontraPosicao(T, ID, JD, N), peca_jog(N)), 
+		   									 	posicaoValidaComer(T, IL, JC, ID, JD) )))); jogo(T,2)),
+
+		%mover direita
+		(ID is IL - 1, JD is JC + 1, encontraPosicao(T, ID, JD, E), casa_valida(E),
+			movePeca(T, IL, JC, ID, JD, pecaC, NovoTabuleiro), jogo(NovoTabuleiro,1));
+
+		%mover esquerda
+		(ID is IL - 1, JD is JC - 1, encontraPosicao(T, ID, JD, E), casa_valida(E),
+			movePeca(T, IL, JC, ID, JD, pecaC, NovoTabuleiro), jogo(NovoTabuleiro,1));
+
+		%comer direita
+		(ID is IL - 1, JD is JC + 1, encontraPosicao(T, ID, JD, E), peca_jog(E),
+			posicaoValidaComer(T, IL, JC, ID, JD), 
+			comePeca(T, IL, JC, ID, JD, pecaC, NovoTabuleiro), jogo(NovoTabuleiro,1));
+
+		%comer esquerda
+		(ID is IL - 1, JD is JC - 1, encontraPosicao(T, ID, JD, E), peca_jog(E),
+			posicaoValidaComer(T, IL, JC, ID, JD), 
+			comePeca(T, IL, JC, ID, JD, pecaC, NovoTabuleiro), jogo(NovoTabuleiro,1))
+
+	).
 
 
 % movePeca(X, 5, 1, 4, 0, Novo), mostraTabuleiro(Novo).
