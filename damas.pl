@@ -71,10 +71,16 @@ jogo(T, V, NP, NC) :-
 	%turno computador
 	( random(0, 8, IL), random(0, 8, JC),
 
-		((encontraPosicao(T, IL, JC, P), peca_comp(P), 
+		( ((encontraPosicao(T, IL, JC, P), peca_comp(P), 
 		   (ID is IL - 1, JD is JC + 1, ( (encontraPosicao(T, ID, JD, K), casa_valida(K)); 
 		   									((encontraPosicao(T, ID, JD, N), peca_jog(N)), 
-		   									 	posicaoValidaComer(T, ID, JD) )))); jogo(T,2, NP, NC)),
+		   									 	posicaoValidaComer(T, ID, JD) )))); jogo(T,2, NP, NC));
+
+		  ((encontraPosicao(T, IL, JC, P), peca_comp(P), 
+		   (ID is IL - 1, JD is JC - 1, ( (encontraPosicao(T, ID, JD, K), casa_valida(K)); 
+		   									((encontraPosicao(T, ID, JD, N), peca_jog(N)), 
+		   									 	posicaoValidaComer(T, ID, JD) )))); jogo(T,2, NP, NC))
+		),
 
 		%mover direita
 		(ID is IL - 1, JD is JC + 1, encontraPosicao(T, ID, JD, E), casa_valida(E),
