@@ -36,14 +36,15 @@ inicializar :-
 	                 [pecaC, invalida, pecaC, invalida, pecaC, invalida, pecaC, invalida],
 	                 [invalida, pecaC, invalida, pecaC, invalida, pecaC, invalida, pecaC]]).
 
-tabuleiroInicial(X) :- jogo(X, 1), write('-Tchau-').
+tabuleiroInicial(X) :- jogo(X, 1, 12, 12), write('-Tchau-').
 
-%----------------Vez-------------------------------
+%----------------Vez--------------------------------------------------
 % 1 - player
 % 2 - computer
 %------------------jogo-----------------------------------------------
-jogo(T, V) :-
+jogo(T, V, NP, NC) :-
 
+	( ((NP == 0, write(' -- Você Perdeu :( --')); (NC == 0, write(' -- Parabéns Você Venceu!--'))) , jogo([[]], 0, 0, 0) );
 	(V == 1,
 		 mostraTabuleiro(T), nl,
 
@@ -52,41 +53,46 @@ jogo(T, V) :-
 		 write('Digite a linha da casa de destino: '), 		nl, read(DX),
 		 write('Digite a coluna da casa de destino: '), 	nl, read(DY),
 
-		(posicaoValida(I, J, DX, DY); (nl, write(' -Posições inválidas- '), nl, jogo(T, 1)) ),
+		(posicaoValida(I, J, DX, DY); (nl, write(' -Posições inválidas- '), nl, jogo(T, 1, NP, NC)) ),
 
-		( (encontraPosicao(T, I, J, P), peca_jog(P), encontraPosicao(T, DX, DY, E), casa_valida(E), 
-			movePeca(T, I, J, DX, DY, P, NovoTabuleiro), jogo(NovoTabuleiro, 2));
+		((encontraPosicao(T, I, J, P), peca_jog(P), encontraPosicao(T, DX, DY, E), casa_valida(E), 
+			movePeca(T, I, J, DX, DY, P, NovoTabuleiro), nl, nl, write(' -- Turno Computador --'), nl, nl, jogo(NovoTabuleiro, 2, NP, NC));
 
 		  (encontraPosicao(T, I, J, P), peca_jog(P), encontraPosicao(T, DX, DY, E), peca_comp(E), 
-			comePeca(T, I, J, DX, DY, P, NovoTabuleiro), jogo(NovoTabuleiro, 2))
+			posicaoValidaComer(T, DX, DY), 
+				comePeca(T, I, J, DX, DY, P, NovoTabuleiro), nl, nl, write(' -- Turno Computador --'), nl, nl, Pecas is NC -1, jogo(NovoTabuleiro, 2, NP, Pecas));
+			
+		  (nl, nl, write('-- Jogada Impossivel --'), nl, nl, jogo(T, 1, NP, NC))	%não conseguiu mover nem comer		  
+
 		) 
 
 	); 
 
-	(write('-Turno Computador-'), nl, random(0, 8, IL), random(0, 8, JC),
+	%turno computador
+	( random(0, 8, IL), random(0, 8, JC),
 
 		((encontraPosicao(T, IL, JC, P), peca_comp(P), 
 		   (ID is IL - 1, JD is JC + 1, ( (encontraPosicao(T, ID, JD, K), casa_valida(K)); 
 		   									((encontraPosicao(T, ID, JD, N), peca_jog(N)), 
-		   									 	posicaoValidaComer(T, ID, JD) )))); jogo(T,2)),
+		   									 	posicaoValidaComer(T, ID, JD) )))); jogo(T,2, NP, NC)),
 
 		%mover direita
 		(ID is IL - 1, JD is JC + 1, encontraPosicao(T, ID, JD, E), casa_valida(E),
-			movePeca(T, IL, JC, ID, JD, pecaC, NovoTabuleiro), jogo(NovoTabuleiro,1));
+			movePeca(T, IL, JC, ID, JD, pecaC, NovoTabuleiro), jogo(NovoTabuleiro,1, NP, NC));
 
 		%mover esquerda
 		(ID is IL - 1, JD is JC - 1, encontraPosicao(T, ID, JD, E), casa_valida(E),
-			movePeca(T, IL, JC, ID, JD, pecaC, NovoTabuleiro), jogo(NovoTabuleiro,1));
+			movePeca(T, IL, JC, ID, JD, pecaC, NovoTabuleiro), jogo(NovoTabuleiro,1, NP, NC));
 
 		%comer direita
 		(ID is IL - 1, JD is JC + 1, encontraPosicao(T, ID, JD, E), peca_jog(E),
 			posicaoValidaComer(T, ID, JD), 
-			comePeca(T, IL, JC, ID, JD, pecaC, NovoTabuleiro), jogo(NovoTabuleiro,1));
+			comePeca(T, IL, JC, ID, JD, pecaC, NovoTabuleiro), Pecas is NP -1, jogo(NovoTabuleiro,1, Pecas, NC));
 
 		%comer esquerda
 		(ID is IL - 1, JD is JC - 1, encontraPosicao(T, ID, JD, E), peca_jog(E),
 			posicaoValidaComer(T,ID, JD), 
-			comePeca(T, IL, JC, ID, JD, pecaC, NovoTabuleiro), jogo(NovoTabuleiro,1))
+			comePeca(T, IL, JC, ID, JD, pecaC, NovoTabuleiro), Pecas is NP -1, jogo(NovoTabuleiro,1, Pecas, NC))
 
 	).
 
@@ -101,15 +107,15 @@ posicaoValida(X,Y, DestinoX, DestinoY) :-
 
 %-----------------posicaoValidaParaComerJogador-------------
 posicaoValidaComer(T, DestinoX, DestinoY) :- %verifica se pode comer
-	I = DestinoX + 1, 
-	(J = DestinoY + 1; J is DestinoY - 1), 
+	I is DestinoX + 1, 
+	(J is DestinoY + 1; J is DestinoY - 1), 
 	encontraPosicao(T, I, J, E), 
 	casa_valida(E).
 
 %-----------------posicaoValidaParaComerComputador-------------
 posicaoValidaComer(T, DestinoX, DestinoY) :- %verifica se pode comer
-	I = DestinoX - 1, 
-	(J = DestinoY + 1; J is DestinoY - 1 ), 
+	I is DestinoX - 1, 
+	(J is DestinoY + 1; J is DestinoY - 1 ), 
 	encontraPosicao(T, I, J, E), 
 	casa_valida(E).  
 
@@ -161,7 +167,6 @@ movePeca(T, X, Y, DestinoX, DestinoY, PAtual, NovoTabuleiro) :-
 
 %-------------comePecaDireitaJogador------------------- 
 comePeca(T, X, Y, DestinoX, DestinoY, PAtual, NovoTabuleiro) :-
-	write('entrou come peca'),
 	DestinoX is X + 1, DestinoY is Y + 1, 
 	trocaPosicao(T, X, Y, vazia, Novo), 
 	trocaPosicao(Novo, DestinoX, DestinoY, vazia, Board),
@@ -170,7 +175,6 @@ comePeca(T, X, Y, DestinoX, DestinoY, PAtual, NovoTabuleiro) :-
 
 %-------------comePecaEsquerdaJogador------------------- 
 comePeca(T, X, Y, DestinoX, DestinoY, PAtual, NovoTabuleiro) :-
-	write('entrou come peca'),
 	DestinoX is X + 1, DestinoY is Y - 1, 
 	trocaPosicao(T, X, Y, vazia, Novo), 
 	trocaPosicao(Novo, DestinoX, DestinoY, vazia, Board),
@@ -179,7 +183,6 @@ comePeca(T, X, Y, DestinoX, DestinoY, PAtual, NovoTabuleiro) :-
 
 %-------------comePecaDireitaComputador------------------- 
 comePeca(T, X, Y, DestinoX, DestinoY, PAtual, NovoTabuleiro) :-
-	write('entrou come peca PC'),
 	DestinoX is X - 1, DestinoY is Y + 1, 
 	trocaPosicao(T, X, Y, vazia, Novo), 
 	trocaPosicao(Novo, DestinoX, DestinoY, vazia, Board),
@@ -188,7 +191,6 @@ comePeca(T, X, Y, DestinoX, DestinoY, PAtual, NovoTabuleiro) :-
 
 %-------------comePecaEsquerdaComputador------------------- 
 comePeca(T, X, Y, DestinoX, DestinoY, PAtual, NovoTabuleiro) :-
-	write('entrou come peca PC'),
 	DestinoX is X - 1, DestinoY is Y - 1, 
 	trocaPosicao(T, X, Y, vazia, Novo), 
 	trocaPosicao(Novo, DestinoX, DestinoY, vazia, Board),
